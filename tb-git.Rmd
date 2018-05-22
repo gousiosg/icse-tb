@@ -31,7 +31,6 @@ output:
 * Open science
 * Availability
 
-
 ## Key concepts
 
 * Break the problem into small well-understood tasks
@@ -240,8 +239,7 @@ $ git cat-file -p 4c2b7a1d59329a3d3a02e9abc5d1e878cf2b07af
 $ git cat-file -p 35dbdb9b45d275393139f03bb86617a6bac75a1a
 100644 blob 4515579877119d3d026f1a8ed01faa60b43add0a	references.bib
 
-$ git cat-file -p 4515579877119d3d026f1a8ed01faa60b43add0a
-gousiosg@MacBookPro:ghtorrent.org [master]$ git cat-file -p 4515579877119d3d026f1a8ed01faa60b43add0a
+$ git cat-file -p 45155798771
 @inproceedings{GPD14,
   author = {Gousios, Georgios and Pinzger, Martin and Deursen, Arie van},
 [...]
@@ -614,4 +612,4 @@ tr ',' '/' |
 xargs -I {} -P 8 git clone --bare https://github.com/{}
 ```
 
-## 
+##
