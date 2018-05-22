@@ -1,0 +1,414 @@
+---
+title: "Mining repositories with Git"
+author: "Georgios Gousios"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  revealjs::revealjs_presentation:
+    css: theme.css
+    highlight: pygments
+    theme: white
+    reveal_options:
+      slideNumber: true
+      previewLinks: true
+---
+
+## The Git user interface
+
+Git is a content-addressable file system, that happens to be good for versioning
+text files. From the user's perspective, Git separates commands in two types:
+
+  * **Porcelain commands:** Contrary to common belief, Git does have a
+    user interface. This includes commands such as `commit`, `log`, etc.
+
+  * **Plumbing commands:** Those interact directly with the Git internals,
+    for example `cat-file`, `update-ref`, etc.
+
+## Git Internals {- }
+
+At the lowest level Git, is a Key-Value (KV) store, residing on the local
+hard drive. For any given input, `git` generates a hash and stores it
+into its database. We can interact with Git's KV store, using the
+`hash-object` and `cat-file` plumbing commands.
+
+```bash
+# Let's write some content in git's store
+$ echo "foo" | git hash-object --stdin -w
+257cc5642cb1a054f08cc83f2d943e56fd3ebe99
+
+# Verify that it was written
+$ find . -type f | grep 56fd3ebe99
+./.git/objects/25/7cc5642cb1a054f08cc83f2d943e56fd3ebe99
+
+# Retrieve contents back
+git cat-file -p 257cc5642cb1a054f08cc83f2d943e56fd3ebe99
+foo
+```
+
+## Git Objects {- }
+
+Git supports 3 types of objects in its database:
+
+  * `blobs`, or content objects. Those store raw content
+  * `trees` store indices to files
+  * `commits` store information about commits, including a link to
+    the top level tree the commit represents
+
+```bash
+$ git clone https://github.com/ghtorrent/ghtorrent.org && \
+  cd ghtorrent.org
+$ git cat-file -t 838b2b05e315713791da7e003af9cc80da64658e
+tree 6754adb51be5f9d4bee3aeafc7bb67c65396a343
+parent af34da36cc381b0da4ec7378ec23b52c31b53145
+parent caa91d1b4052a0e34cabe2b415f0f5cf232e8837
+author Georgios Gousios <gousiosg@gmail.com> 1517405162 +0100
+committer Georgios Gousios <gousiosg@gmail.com> 1517405162 +0100
+
+Merge branch 'italobelo-patch-1'
+```
+
+## Tree objects
+
+Tree objects contain links to blob objects or other tree objects.
+Each blob object always has a corresponding tree object, otherwise
+it is not discoverable.
+
+```bash
+$ git cat-file -p 4c2b7a1d59329a3d3a02e9abc5d1e878cf2b07af
+100644 blob ae10be1b81757e2127a8328e16b2b2155a64edeb	.gitignore
+100644 blob 6904bcdd60efe9315801621c3c36d805f7963148	404.html
+100644 blob 7370bac51515903c580df4e946d62cc270eb112c	Gemfile
+040000 tree 35dbdb9b45d275393139f03bb86617a6bac75a1a	_bibliography
+100644 blob 4103650b66ad802a65afc60a1088e17e06f04cc2	README.md
+[...]
+
+$ git cat-file -p 35dbdb9b45d275393139f03bb86617a6bac75a1a
+100644 blob 4515579877119d3d026f1a8ed01faa60b43add0a	references.bib
+
+$ git cat-file -p 4515579877119d3d026f1a8ed01faa60b43add0a
+gousiosg@MacBookPro:ghtorrent.org [master]$ git cat-file -p 4515579877119d3d026f1a8ed01faa60b43add0a
+@inproceedings{GPD14,
+  author = {Gousios, Georgios and Pinzger, Martin and Deursen, Arie van},
+[...]
+```
+
+## Commit objects
+
+Commit objects represent a starting point to start navigating a file
+tree at a specific version.
+
+```bash
+$ git cat-file -t 838b2b05e315713791da7e003af9cc80da64658e
+tree 6754adb51be5f9d4bee3aeafc7bb67c65396a343
+parent af34da36cc381b0da4ec7378ec23b52c31b53145
+parent caa91d1b4052a0e34cabe2b415f0f5cf232e8837
+author Georgios Gousios <gousiosg@gmail.com> 1517405162 +0100
+committer Georgios Gousios <gousiosg@gmail.com> 1517405162 +0100
+
+Merge
+```
+
+_Tags_ are a special type of commit objects: they point to a commit but
+has a `tagger` rather than an `author`.
+
+```bash
+$ git cat-file -t
+```
+
+## References
+
+ Git uses _references_ to give human readable names to important commit
+ objects.
+
+```bash
+$ find .git/refs -type f
+.git/refs/heads/master
+.git/refs/heads/pr-51
+.git/refs/remotes/origin/HEAD
+.git/refs/remotes/origin/master
+
+$ cat .git/refs/heads/master
+eb6ba576ec6dd0be077f20ccc47f2269580d6de8
+```
+
+Branches are just references.
+
+```bash
+$ git branch
+* master
+  pr-51
+
+$ cat .git/refs/heads/pr-51
+b058f06bd69ec7aed7a976c737eb8579904720fd
+```
+
+## Putting the pieces together
+
+![The Git Object Model](data-model-4.png){width=80%}
+
+The Git object model is a directed graph stored in a KV database,
+featuring file system semantics that enable content de-duplication.
+
+## How to implement Git log?
+
+**D:** Given what you know already, how would you implement a rudimentary
+version of `git log`?
+
+. . .
+
+```bash
+
+```
+
+## Efficient mining of `git` data
+
+While Git is fast at checking out specific versions to analyze, we
+can skip this step all together.
+
+We just need three tools:
+
+  * `show:` To interact with blobs
+  * `ls-tree:` To interact with trees
+  * `log:` To interact with commits
+
+## Git mining: Typical process
+
+1. Get commits from all branches (`branch`, `log`)
+2. Select specific commits to analyze (`log`)
+3. Get specific/all files for those commits
+4. Process the contents of those files with external tools
+
+## Git `log`: important options
+
+Git `log` walks the git commit graph and prints details from commit
+objects. Generally, Git `log` can be configured across 3 dimensions:
+
+  * _where to find commits_: `--all`, `--remotes`
+  * _which commits to exclude_: `--author`, `--grep`, `--filename`
+  * _what details to print_: `--pretty=<format>`
+
+```bash
+# Find commits by moritzbeller, containing an issue reference
+# and print their abbreviated SHA and tree SHA
+$ git --no-pager log --author moritzbeller@gmx.de --grep "Refs" \
+      --pretty="%h %t"
+1a4dafcc 89875e32
+6b8e79e6 ebb41476
+ac4842e1 5107a9d0
+[...]
+```
+
+## Interacting with trees
+
+Git `ls-tree` prints the contents of a Git tree, identified by its
+SHA1. Important options:
+
+  * `-r` Recursive listing of all tree items
+  * `--abbrev` Abbreviate hashes (usually 10 is enough)
+
+```bash
+$ git ls-tree --abbrev=10 -r aada6ffe|head -n 10
+100644 blob 4c05514ff2	.gitignore
+100644 blob a5b896487d	.travis.yml
+100644 blob 14aa34d8aa	WatchDogCore/Core.iml
+100644 blob 1fb2ad661b	WatchDogCore/WatchDog/.classpath
+100644 blob a0cb478b8a	WatchDogCore/WatchDog/.project
+100644 blob 62492222ad	WatchDogCore/WatchDog/.settings/org.eclipse.jdt.core.prefs
+100644 blob f897a7f1cb	WatchDogCore/WatchDog/.settings/org.eclipse.m2e.core.prefs
+100644 blob b0a8bfcbcc	WatchDogCore/WatchDog/META-INF/MANIFEST.MF
+[...]
+```
+
+## Interacting with blobs
+
+Git `show` prints the contents of a blob, identified by its blob SHA. In
+that sense, it is similar to `cat-file`
+
+```bash
+$ git --no-pager show 841f06d4ee
+package nl.tudelft.watchdog.test.timingOutput;
+
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+[...]
+```
+
+## Example workflow
+
+Find sizes for all test file versions in a Java project
+
+```bash
+git log --pretty="%h,%t,%ae"|
+while read logline; do
+  tree=`echo $logline|cut -f2 -d ','`
+  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
+done |
+sort |
+uniq |
+while read testfile; do
+  blob=`echo $testfile|cut -f1 -d' '`
+  size=`git --no-pager show $blob|wc -l|tr -d ' '`
+  echo $testfile $size
+done |
+sort -k 2
+```
+
+. . .
+
+**D:** Do you see how the above code could be improved?
+
+## Example workflow -- better version
+
+We can wrap loops into functions and apply them with `xargs` or `parallel`.
+This also makes our code testable.
+
+```bash
+function tree_items {
+  tree=`echo $1|cut -f2 -d ','`
+  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
+}
+
+function file_size {
+  blob=`echo $1|cut -f1 -d' '`
+  echo $1 `git --no-pager show $blob|wc -l`
+}
+
+function per_repo {
+  echo $1
+  cd $1
+  git log --pretty="%h,%t,%ae"|
+  parallel tree_items {} |
+  sort | uniq |
+  parallel file_size {} |
+  sort -k 2
+}
+
+export -f tree_items file_size per_repo
+
+time ls | parallel per_repo
+done
+```
+
+## Mining with `libgit2`/`JGit`
+
+Shell scripting can go a long way, but it has limitations:
+
+* Each step of a pipeline is a process, which must be spawned. Loops can
+  be costly.
+* Useful data structures (queues, trees) are cumbersome to implement.
+* Testing/Debugging can be tricky.
+
+In those cases, we can use `libgit2` or `JGit`, for scripting languages or
+Java; we get exactly the same interface, but in a much richer programming
+environment.
+
+## Selecting repositories to mine
+
+Generally, we need repositories that are active and representative.
+Fortunately, we have datasets such as GHTorrent and RepoReapers available.
+We can use the following selection process:
+
+From the whole population:
+
+1. Choose repositories that have forks ($A$)
+2. from $A$, exclude repos that were inactive _recently_ ($B$)
+2. from $B$, exclude repos that never received a PR ($C$)
+
+On $C$, we can then apply further criteria (e.g. programming language,
+build system, minimum number of stars etc).
+
+If the project list is still too long, then apply _stratified sampling_
+
+## GHTorrent queries (1)
+
+Projects that have forks ($A$)
+
+```sql
+select distinct(p1.id), u.login, p1.name
+from projects p1
+  join projects p2 on p1.id = p2.forked_from
+  join users u on u.id = p1.owner_id
+```
+
+Projects that where active recently ($B$)
+
+```sql
+select distinct(p.id), u.login, p.name
+from projects p
+  join users u on u.id = p.owner_id
+  join project_commits pc on pc.project_id = p.id
+  join commits c on pc.commit_id = c.id
+where c.created_at >= now() - interval 3 month
+```
+
+## GHTorrent queries (2)
+
+Projects that never received a PR ($C$)
+
+```sql
+select distinct(p.id), u.login, p.name
+from projects p
+  join users u on u.id = p.owner_id
+  join pull_requests pr on pr.base_repo_id = p.id
+where c.created_at >= now() - interval 3 month
+```
+
+Putting it all together:
+
+```sql
+select A.id, A.login, A.name
+from A join B on A.id = B.id
+  left join C on B.id = C.id
+```
+
+## Getting extra information
+
+The selection process will return a list of projects that looks like this:
+
+```csv
+project_id, owner, repo
+1334,rails,rails
+1335,jenkinsm,cellulite
+1337,lshift,diffa
+1341,CottageLabs,cl
+1342,Craga89,qTip2
+1345,xforty,vagrant-drupal
+```
+
+We might need to get extra information from the GitHub API (e.g. number of
+stars, language), to do the selection. This is easy to do with two basic tools:
+
+  * `curl` Retrieves contents from URLs
+  * `jq` Query JSON objects
+
+## Obtaining star count
+
+```bash
+cat repos.csv | cut -f 2,3 -d ','  | tr ',' '/' |
+xargs -I {} curl  -s https://api.github.com/repos/{}|
+jq '[.stargazers_count, .language |tostring]|join(", ")' > info.csv
+
+paste -d ',' repos.csv info.csv
+```
+
+If your project list is big, you will quickly hit the GitHub API
+rate limit. You then need a GitHub API key, which you can provide
+to `curl` as follows
+
+```bash
+curl -H "Authorization: token OAUTH-TOKEN" -s ...
+```
+
+## Cloning the repositories
+
+After we have clarified our selection, we need to clone the repositories.
+For this, we will use the Git `bare` format, to minimize space usage.
+
+```bash
+cat repos.txt |
+cut -f 2,3 -d ',' |
+tr ',' '/' |
+xargs -I {} -P 8 git clone --bare https://github.com/{}
+```
