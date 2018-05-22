@@ -346,7 +346,7 @@ SHA1. Important options:
   * `--abbrev` Abbreviate hashes (usually 10 is enough)
 
 ```bash
-$ git ls-tree --abbrev=10 -r aada6ffe|head -n 10
+$ git ls-tree --abbrev=10 -r aada6ffe | head -n 10
 100644 blob 4c05514ff2	.gitignore
 100644 blob a5b896487d	.travis.yml
 100644 blob 14aa34d8aa	WatchDogCore/Core.iml
@@ -380,16 +380,16 @@ import java.util.List;
 Find sizes for all test file versions in a Java project
 
 ```bash
-git log --pretty="%h,%t,%ae"|
+git log --pretty="%h,%t,%ae" |
 while read logline; do
-  tree=`echo $logline|cut -f2 -d ','`
+  tree=`echo $logline | cut -f2 -d ','`
   git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
 done |
 sort |
 uniq |
 while read testfile; do
-  blob=`echo $testfile|cut -f1 -d' '`
-  size=`git --no-pager show $blob|wc -l|tr -d ' '`
+  blob=`echo $testfile | cut -f1 -d' '`
+  size=`git --no-pager show $blob | wc -l | tr -d ' '`
   echo $testfile $size
 done |
 sort -k 2
@@ -405,16 +405,16 @@ This also makes our code testable.
 
 ```bash
 function tree_items {
-  tree=`echo $1|cut -f2 -d ','`
+  tree=$(echo $1 | cut -f2 -d ',')
   git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
 }
 
 function file_size {
-  blob=`echo $1|cut -f1 -d' '`
-  echo $1 `git --no-pager show $blob|wc -l`
+  blob=$(echo $1 | cut -f1 -d' ')
+  echo $1 $(git --no-pager show $blob | wc -l)
 }
 
-time git log --pretty="%h,%t,%ae"| parallel tree_items {} |
+time git log --pretty="%h,%t,%ae" | parallel tree_items {} |
 sort | uniq |
 parallel file_size {} |
 sort -k 2
@@ -440,7 +440,7 @@ function file_size {...}
 
 function per_repo {
   cd $1
-  git log --pretty="%h,%t,%ae"|
+  git log --pretty="%h,%t,%ae" |
   parallel tree_items {} |
   sort | uniq |
   parallel file_size {} |
@@ -573,7 +573,7 @@ stars, language), to do the selection. This is easy to do with two basic tools:
 
 ```bash
 cat repos.csv | cut -f 2,3 -d ','  | tr ',' '/' |
-xargs -I {} curl  -s https://api.github.com/repos/{}|
+xargs -I {} curl  -s https://api.github.com/repos/{} |
 jq '[.stargazers_count, .language |tostring]|join(", ")' > info.csv
 
 paste -d ',' repos.csv info.csv
