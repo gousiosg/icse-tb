@@ -12,6 +12,16 @@ output:
       previewLinks: true
 ---
 
+## Basics
+
+* Command line rationale
+* Getting to the command line
+* Workflow
+* Commands
+* Expansion and quoting
+* Programming constructs
+* Help!
+
 ## CLI rationale
 
 * Versatility
@@ -151,6 +161,12 @@ esac
 * `man` *command*
 * GIYF
 * [The Art of the Command Line](https://github.com/jlevy/the-art-of-command-line)
+
+## Fetching Git data
+
+* Git internals
+* Git commands
+* Web and JSON data
 
 ## The Git user interface
 
@@ -597,3 +613,5 @@ cut -f 2,3 -d ',' |
 tr ',' '/' |
 xargs -I {} -P 8 git clone --bare https://github.com/{}
 ```
+
+## 
