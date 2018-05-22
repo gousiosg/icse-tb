@@ -394,10 +394,9 @@ while read testfile; do
 done |
 sort -k 2
 ```
-
 . . .
 
-**D:** Do you see how the above code could be improved?
+**D:** Do you see how the code above could be improved?
 
 ## Example workflow -- better version
 
@@ -415,8 +414,31 @@ function file_size {
   echo $1 `git --no-pager show $blob|wc -l`
 }
 
+time git log --pretty="%h,%t,%ae"| parallel tree_items {} |
+sort | uniq |
+parallel file_size {} |
+sort -k 2
+```
+
+. . .
+
+**D:** How can we execute this code on 100s of repos?
+
+## Scaling the analysis
+
+We have to options:
+
+  * Run yet another parallel loop
+  * Use `make`
+
+. . .
+
+```bash
+function tree_items {...}
+
+function file_size {...}
+
 function per_repo {
-  echo $1
   cd $1
   git log --pretty="%h,%t,%ae"|
   parallel tree_items {} |
@@ -428,7 +450,31 @@ function per_repo {
 export -f tree_items file_size per_repo
 
 time ls | parallel per_repo
-done
+```
+
+## Making it repeatable with `make`
+
+```Makefile
+INPUTS = $(shell find . -type d -name '*.git')
+OUTPUTS = $(INPUTS:.git=.ts)
+
+TESTSIZE=/home/gousiosg/repos/testsize
+
+%.ts : %.git
+  cd $< && \
+  $(TESTSIZE) > ../$(@F)
+
+all: $(OUTPUTS)
+
+clean:
+  rm *.ts
+```
+
+We use `make` as both a dependency tracker and a parallelisation tool.
+
+```bash
+$ make -n    # See what will be run
+$ make -j 16 # Run 16 parallel jobs
 ```
 
 ## Mining with `libgit2`/`JGit`
