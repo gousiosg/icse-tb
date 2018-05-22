@@ -12,6 +12,146 @@ output:
       previewLinks: true
 ---
 
+## CLI rationale
+
+* Versatility
+* Performance
+  * Parallelism
+  * Efficiency
+* Open science
+* Availability
+
+
+## Key concepts
+
+* Break the problem into small well-understood tasks
+* Each tool do should do a single thing and do it well
+* One form of interface: flat text
+    * One record per line
+    * Fields split by space or other special character
+* Filters
+
+## Typical work-flow
+
+* Fetch
+* Select
+* Process
+* Summarize
+* (Plus plumbing and programming)
+
+## Getting to the command line
+
+* Windows: Cygwin + mintty or Windows Subsystem for Linux (WSL)
+* Mac OS X: Applications - Utilities - Terminal
+* Unix/Linux:  terminal, xterm, rxvt, konsole, kvt, gnome-terminal, nxterm, eterm
+
+## Simple commands
+
+```sh
+command
+
+# Input redirection
+command <input-file
+
+# Output redirection
+command >output-file
+
+# Pipeline
+command1 | command2
+
+# Background execution
+command &
+```
+
+## Variables, expansions
+
+```sh
+# Variable assignment
+e=expansion
+
+# Variable expansion
+$e
+
+# Command expansion
+$(command)
+
+# Quoting
+'literal string'
+"single string with $e"
+Literal \$ \' \"
+
+# Wildcards
+* ? [abc] [0-9]
+```
+
+## Combining commands
+
+```sh
+# Sequence
+command1 ; command2
+
+# Subshell execution
+(command1 ; command2)
+
+# Exit code variable
+$?
+
+# Disjunction
+command1 || command2
+
+# Conjunction
+command1 && command2
+```
+
+## Conditional
+
+```sh
+if command ; then
+  command1
+elif command ; then
+	command2
+else
+	command3
+fi
+```
+
+## While loop
+
+```sh
+while command ; do
+  commands
+done
+
+# Process piped input
+while read var ; do
+  commands
+done
+```
+
+## Set loop
+
+```sh
+for var in a b c; do
+  commands
+done
+```
+
+## Selection
+
+```sh
+case word in
+pattern1) list ;;
+pattern2) list ;;
+esac
+```
+
+## Help!
+
+* *command* `--help`
+* `man` *command*
+* GIYF
+* [The Art of the Command Line](https://github.com/jlevy/the-art-of-command-line)
+
 ## The Git user interface
 
 Git is a content-addressable file system, that happens to be good for versioning
