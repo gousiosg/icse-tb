@@ -7,7 +7,7 @@ R=Rscript -e
 
 .PHONY: all html pdf book
 
-CONTENT_DIRS := $(shell pwd)
+CONTENT_DIRS := .
 INPUTS = $(shell find $(CONTENT_DIRS) -type f -name '*.Rmd' | egrep -v "header|footer")
 
 OUTPUTS_HTML = $(INPUTS:.Rmd=.html)
