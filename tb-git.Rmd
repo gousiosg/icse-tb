@@ -194,7 +194,7 @@ Git supports 3 types of objects in its database:
     the top level tree the commit represents
 
 ```bash
-$ git clone https://github.com/ghtorrent/ghtorrent.org && \
+$ git --bare clone https://github.com/ghtorrent/ghtorrent.org && \
   cd ghtorrent.org
 $ git cat-file -t 838b2b05e315713791da7e003af9cc80da64658e
 tree 6754adb51be5f9d4bee3aeafc7bb67c65396a343
@@ -439,8 +439,7 @@ function tree_items {...}
 function file_size {...}
 
 function per_repo {
-  cd $1
-  git log --pretty="%h,%t,%ae" |
+  git --git-dir="$1" log --pretty="%h,%t,%ae" |
   parallel tree_items {} |
   sort | uniq |
   parallel file_size {} |
