@@ -152,15 +152,6 @@ for var in a b c; do
 done
 ```
 
-## Selection
-
-```sh
-case word in
-pattern1) list ;;
-pattern2) list ;;
-esac
-```
-
 ## Help!
 
 * *command* `--help`
