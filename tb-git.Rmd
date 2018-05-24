@@ -1,6 +1,6 @@
 ---
 title: "Mining repositories with Git"
-author: "Georgios Gousios"
+author: "Diomidis Spinellis and Georgios Gousios"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   revealjs::revealjs_presentation:
