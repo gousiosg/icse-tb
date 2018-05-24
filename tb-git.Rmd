@@ -442,6 +442,11 @@ sort -k 2
 
 **D:** How can we execute this code on 100s of repos?
 
+## Worth knowing
+* *find*: select files from checked out projects
+* *ssh*: obtain data from remote host
+* *mysql*: execute SQL queries on MariaDB / mySQL
+
 ## Workflow: Select
 ![](artwork/select.jpg)
 
@@ -460,7 +465,7 @@ sort -k 2
 * Any character: `.`
 * Any number of times: `k*`
 * Set: `[a-z]`
-* Complement: `[^a-z]`
+* Set complement: `[^a-z]`
 * Beginning of line: `^a`
 * End of line: `b$`
 * Escaping: `\.` `\[` `\*`
@@ -576,12 +581,191 @@ sort -u
 ## Workflow: Process
 ![](artwork/process.jpg)
 
-# Processing with awk
-* Associative arrays
-* `BEGIN`, `END` pseudo-predicates
+## Tools
+* sort
+* comm
+* join
+* tr
+
+## sort
+* Ordering
+* Grouping
+* Top *N* / bottom *N*
+* Merging
+* Prepare for
+    * Set operations
+    * Joining
+
+## Useful sort arguments
+* `--numeric-sort` or `-n`
+* `--reverse` or `-r`
+* `--key=2nr` or `-k2nr`
+* `--unique` or `-u`
+* `--field-separator=:` or `-t`
+* `--month-sort` or `-m`
+
+## Grouping and ordering
+Top-5 Linux committers
+```sh
+# Show commit emails
+git log --pretty="%ae" |
+sort |
+# Count consecutive same records
+uniq -c |
+# Order numerically
+sort -rn |
+# Obtain top-5
+head -5
+```
+
+Results:
+```
+  17317 torvalds@linux-foundation.org
+   6679 davem@davemloft.net
+   5790 tiwai@suse.de
+   4163 viro@zeniv.linux.org.uk
+   4111 hsweeten@visionengravers.com
+```
+
+## Set operations with comm
+* Input: two sorted files
+* Output:
+    * Records only in first (exclude with `-1`)
+    * Records only in second (exclude with `-2`)
+    * Common records (exclude with `-3`)
+* Performs set difference and intersection
+
+## comm example
+How many Linux commits affect both the kernel and drivers?
+```bash
+# Obtain ordered list of SHA hashes
+area_commits()
+{
+  git log --pretty='%H' master -- $1 | sort
+}
+
+# Count common elements
+comm -12 <(area_commits kernel) <(area_commits drivers) | wc -l
+```
+
+Result: 2213
+
+## join example
+Number of commits by same people in Linux and Docker
+```bash
+# Commits per committer
+committer_commits()
+{
+  git --git-dir=$1 log --pretty='%ae' | sort | uniq -c | sort -k2
+}
+
+# Join commits by comitter email
+join -j 2 <(committer_commits docker/docker) <(committer_commits torvalds/linux) |
+# Order by Docker commits
+sort -k3nr |
+# Top-5
+head -5
+```
+
+Result:
+```
+h.huangqiang@huawei.com 8 129
+vgoyal@redhat.com 164 84
+vbatts@hashbangbash.com 1 62
+hukeping@huawei.com 1 59
+sunyuan3@huawei.com 8 38
+```
+
+## tr
+* Map characters
+* To uppercase: `tr a-z A-Z`
+* Delete newlines: `tr -d '\n'`
+* Complement set: `tr -cs A-Za-z '\n'`
+    * This generates a list of words
+
+## tr example
+Number of structural change commits
+```sh
+# Project and file to analyze
+cd ReactiveX/RxJava
+f=src/main/java/rx/Observable.java
+
+# Obtain list of commit hashes
+git log --pretty='%H' 1.x -- $f |
+while read sha ; do
+  # Show file at given version
+  git show $sha:$f |
+  # Convert it into structure signature
+  tr -cd '{}'
+  # Start a new line
+  echo
+done |
+# Obtain unique structures and count them
+uniq |
+wc -l
+```
+
+## Worth knowing
+* *tsort*: topological sort
+* *gvpr*: graph processing
+* *diff*: file difference
+* *test*: evaluate predicates
+* *expr*: evaluate expressions
+* *date*: convert between date formats
+* *paste*: paste file records side by side
+* *rev*: reverse characters of each line
+* *tac*: reverse order of lines in file
 
 ## Workflow: Summarize
 ![](artwork/summarize.jpg)
+
+## Simple tools
+* *wc*: count records
+* *head*: first *N* records
+* *tail*: last *N* records
+* *uniq*: unique records
+
+## Summarizing with awk
+* Associative arrays
+* `BEGIN`, `END` pseudo-predicates
+
+## awk summary example
+Count common / total commits in Linux kernel / drivers
+
+```bash
+comm -12 <(area_commits kernel) <(area_commits drivers) |
+# Sum kernel, driver, and common commits
+awk -F$'\t' '
+  $1 {k++}
+  $2 {d++}
+  $3 {c++}
+  END {print k + c, d + c, c}'
+```
+
+Result:
+```
+22645 310148 2213
+```
+Out of 22,645 kernel commits and 310,148 driver commits, only 2,213 are common!
+
+## awk array example
+When are the most lines committed?
+```sh
+# git log with hour and added/removed/file records
+git log --date=format:%H --pretty=%ad --numstat |
+awk '
+  # Keep record of time
+  NF == 1 {hour = $1}
+  # Accumulate lines added
+  NF == 3 {added[hour] += $1}
+  END {
+    for (i in added)
+      print i, added[i]
+    }' |
+# Order by volume; get top
+sort -k 2rn | head -1
+```
+Result: 15:00 for Linux, 21:00 for FreeBSD, 22:00 for RxJava
 
 ## Scaling the analysis
 
