@@ -133,9 +133,10 @@ else
 fi
 ```
 
-## While loop
+## Looping
 
 ```sh
+# Repeat while command succeeds
 while command ; do
   commands
 done
@@ -144,11 +145,8 @@ done
 while read var ; do
   commands
 done
-```
 
-## Set loop
-
-```sh
+# Iterate over a set
 for var in a b c; do
   commands
 done
