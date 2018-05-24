@@ -113,24 +113,6 @@ command1 ; command2
 
 # Exit code variable
 $?
-
-# Disjunction
-command1 || command2
-
-# Conjunction
-command1 && command2
-```
-
-## Conditional
-
-```sh
-if command ; then
-  command1
-elif command ; then
-	command2
-else
-	command3
-fi
 ```
 
 ## Looping
