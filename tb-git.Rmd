@@ -161,6 +161,10 @@ esac
 * GIYF
 * [The Art of the Command Line](https://github.com/jlevy/the-art-of-command-line)
 
+## Workflow: Fetch
+![](artwork/fetch.jpg)
+
+
 ## Fetching Git data
 
 * Git internals
@@ -437,6 +441,15 @@ sort -k 2
 . . .
 
 **D:** How can we execute this code on 100s of repos?
+
+## Workflow: Select
+![](artwork/select.jpg)
+
+## Workflow: Process
+![](artwork/process.jpg)
+
+## Workflow: Summarize
+![](artwork/summarize.jpg)
 
 ## Scaling the analysis
 
