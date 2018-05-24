@@ -1,0 +1,5 @@
+- Integrating with LaTeX
+- Traps, pitfalls, and good practices
+  - Spaces: quoting and -0
+  - Temporary files and trapping
+- Scripting
