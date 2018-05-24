@@ -767,6 +767,9 @@ sort -k 2rn | head -1
 ```
 Result: 15:00 for Linux, 21:00 for FreeBSD, 22:00 for RxJava
 
+## Scaling
+![](artwork/scale.jpg)
+
 ## Scaling the analysis
 
 We have to options:
