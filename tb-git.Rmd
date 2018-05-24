@@ -445,8 +445,140 @@ sort -k 2
 ## Workflow: Select
 ![](artwork/select.jpg)
 
+## Tools
+* grep
+* fgrep
+* egrep
+* awk
+* sed
+* (cut)
+* (jq)
+* (xml)
+
+## Regular expressions
+* Regular characters: `a`
+* Any character: `.`
+* Any number of times: `k*`
+* Set: `[a-z]`
+* Complement: `[^a-z]`
+* Beginning of line: `^a`
+* End of line: `b$`
+* Escaping: `\.` `\[` `\*`
+* Extended: `a|b` `c+` `d?` `{9}` `{,9}`
+* Back-references: `(a.b)` `\1`
+
+## Fixed pattern
+Obtaining committer timezones
+```sh
+git blame --line-porcelain readme.md |
+fgrep committer-tz |
+sort |
+uniq -c |
+sort -rn |
+head -4
+```
+
+Result:
+```
+    270 committer-tz +0700
+    228 committer-tz +0200
+     50 committer-tz +0100
+     14 committer-tz +0000
+```
+
+## Simple RE
+Assembly language lines in Fourth Research Edition Unix
+```sh
+git ls-tree -r --name-only Research-V4 sys |
+grep '\.s$' |
+xargs -I@ git show Research-V4:@ |
+wc -l
+```
+
+## More complex RE
+* Git built-in *grep* command
+* Count the number of header include directives
+```sh
+git grep '^[ \t]*#[ \t]*include.*\.h' Research-V4 |
+wc -l
+```
+
+## Counting files
+```sh
+git grep -l '^[ \t]*#[ \t]*include.*\.h' Research-V4 |
+wc -l
+```
+
+## Counting elements
+Number of Makefile files in the second BSD distribution (32)
+```sh
+git ls-tree -r --name-only BSD-2 -- |
+grep -c /makefile\$
+```
+
+## Excluding patterns
+Number of networks system call **uses** in BSD 4.2
+```sh
+for i in accept ... socketpair do
+  echo -n $i
+  # Find system call lines
+  git grep -P "\\b$i\\s*\\(" BSD-4_2 |
+  # Remove kernel source code
+  grep -v :usr/src/sys |
+  # Remove noise
+  egrep -v '/(games|new|pcc)/' |
+  # Count occurrences in C source code
+  grep -c ':usr/src.*\.c:'
+done |
+sort -k3nr
+```
+
+## Selecting with awk
+* *predicate* `{` *action* `}`
+* Any of the two can be missing
+* Predicate:
+    * Regular expression
+    * Arithmetic expression
+    * Logical expression
+* Auto-splitting into `$`*N*
+* Change field separator: `-F,`
+
+## awk example
+Contributed subsystems larger than 100 kLoC
+```sh
+git ls-tree --name-only FreeBSD-release/11.1.0:contrib |
+while read d ; do
+  echo -n "$d "
+  git ls-tree -r --name-only FreeBSD-release/11.1.0:contrib/$d |
+  xargs -I@ git show FreeBSD-release/11.1.0:contrib/$d/@ |
+  wc -l
+done |
+awk '$2 > 100000'
+```
+
+## sed
+* `s/`*RE*`/`*string*`/`
+* `/`*pattern*`/`*command*
+* `/`*pattern*`/!`*command*
+* `n`ext
+* `N`ext (append)
+* `d`elete
+* `p`rint
+
+## sed example
+Email domains of Linux pipe.c contributors
+```sh
+git blame --show-email master -- fs/pipe.c |
+sed -n 's/^[^ ]* (<[^@]*@\([^>]*\).*/\1/p' |
+sort -u
+```
+
 ## Workflow: Process
 ![](artwork/process.jpg)
+
+# Processing with awk
+* Associative arrays
+* `BEGIN`, `END` pseudo-predicates
 
 ## Workflow: Summarize
 ![](artwork/summarize.jpg)
