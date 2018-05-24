@@ -71,3 +71,9 @@ code {
 .reveal .knitsql-table {
   font-size: 70%;
 }
+
+.reveal section img {
+  background:none;
+  border:none;
+  box-shadow:none;
+}
