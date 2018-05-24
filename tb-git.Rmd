@@ -12,6 +12,15 @@ output:
       previewLinks: true
 ---
 
+## Outline
+
+* Basics
+* Fetching Git data
+* Selecting elements
+* Processing records
+* Summarizing results
+* Scaling
+
 ## Basics
 
 * Command line rationale
