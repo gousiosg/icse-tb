@@ -453,7 +453,8 @@ function tree_items {...}
 function file_size {...}
 
 function per_repo {
-  git --git-dir="$1" log --pretty="%h,%t,%ae" |
+  cd $1
+  git log --pretty="%h,%t,%ae" |
   parallel tree_items {} |
   sort | uniq |
   parallel file_size {} |

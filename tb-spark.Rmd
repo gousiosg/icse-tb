@@ -679,15 +679,177 @@ df = sqlContext.read.csv("/datasets/pullreqs.csv", sep=",",
 * The _driver_ accepts user programs and returns processing results
 * The _cluster manager_ does resource allocation
 
+# Using Spark for structured data
+
+## Spark as an efficient Pandas/R backend
+
+While R and Python are handy with small CSV files, they can be
+very slow when the number of CSV file lines reaches $10^6$.
+
+Spark offers a very versatile structured data framework and
+can act as an efficient backend for:
+
+* Interactive exploration
+* Ad-hoc querying and joing structured data
+* Machine learning applications
+
+## Our running example: Pull Requests!
+
+```python
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+from pyspark.sql import SQLContext
+
+sqlContext = SQLContext(sc)
+
+df = sqlContext.read.csv("hdfs://athens:8020/pullreqs.csv",
+                         sep=",", header=True, inferSchema=True).\
+                     cache()
+
+sqlContext.registerDataFrameAsTable(df, "pullreqs")
+```
+
+The dataset we are using is from [Gousios and Zaidman, 2014](https://drive.google.com/open?id=0B9Rx0uhucsroV196OEp5VGhzSkU)
+
+## Running SQL queries
+
+Listing projects
+
+```python
+sqlContext.sql("select distinct(project_name) from pullreqs").show(10)
+```
+
+Check how PRs are merged
+
+```python
+sqlContext.sql("""select merged_using, count(*) as occurences
+                  from pullreqs
+                  group by merged_using
+                  order by occurences desc""").show()
+
++--------------------+----------+
+|        merged_using|occurences|
++--------------------+----------+
+|              github|    364528|
+|   commits_in_master|    342339|
+|             unknown|    138566|
+|  merged_in_comments|     29273|
+|commit_sha_in_com...|     23234|
+|     fixes_in_commit|     18125|
++--------------------+----------+
+```
+
+## Nested SQL queries
+
+Queries can be complicated. Here we use a nested query to get the projects per
+programming language.
+
+```python
+sqlContext.sql("""select lang, count(*) as num_projects
+                  from (
+                      select distinct(project_name), lang
+                      from pullreqs
+                  ) as project_langs
+                  group by lang""").show()
+
++----------+------------+
+|      lang|num_projects|
++----------+------------+
+|javascript|        1726|
+|    python|        1518|
+|      ruby|        1086|
+|      java|        1075|
+|     scala|         138|
++----------+------------+
+```
+
+## Joining across data sources
+
+Suppose we would like to get some more info about the PR mergers from
+GHTorrent.
+
+```python
+users = sqlContext.read.format("jdbc").options(
+          url='jdbc:mysql://munich/ghtorrent?&serverTimezone=UTC',
+          driver='com.mysql.jdbc.Driver',
+          dbtable='users',
+          user='ght', password='ght',
+          partitionColumn = "id",
+          numPartitions = "56",
+          lowerBound = "0", upperBound = "40341639").\
+          load().cache()
+
+sqlContext.registerDataFrameAsTable(users, "users")
+```
+
+What is important here is partitioning: this will split the MySQL table
+in `numPartitions` partitions and allow for parallel processing of the data.
+If the table is small, `cache()`-ing it will help performance tremendously.
+
+## Joining data sources
+```python
+sqlContext.sql("""select distinct(u.id), u.login, u.country_code
+                from users u join pullreqs pr on u.login = pr.merger
+                where country_code != 'null'""").show(10)
+```
+
+This returns the expected results, even though the data resides in 2
+(very) different sources.
+
+```
++-------+----------------+------------+
+|     id|           login|country_code|
++-------+----------------+------------+
+|2870788|Bernardstanislas|          fr|
+|1136167|CamDavidsonPilon|          ca|
+|  35273|      DataTables|          gb|
+|2955396|         Drecomm|          nl|
+|2468606|      Gaurang033|          in|
+|2436711|         JahlomP|          gh|
+|8855272|     JonnyWong16|          ca|
+| 624345|          M2Ys4U|          gb|
+|1185808|         PierreZ|          fr|
++-------+----------------+------------+
+```
+
+## Exporting to Pandas/R
+
+Spark only offers basic statistics;
+fortunately, we can easily export data to Pandas/R.
+
+```python
+import pandas as pd
+
+pandas_df = sqlContext.sql(
+  """select project_name, count(*) as num_prs
+     from pullreqs
+     group by project_name""").toPandas()
+
+pandas_df.describe()
+
+---
+            num_prs
+count   5543.000000
+mean     165.265199
+std      407.276860
+min        1.000000
+25%       60.000000
+50%       85.000000
+75%      150.000000
+max    17630.000000
+```
+
 # Mining repositories with Spark
 
 ## The source{d} MSR stack
 
-source{d} is
+source{d} is a start up that develops tools for doing research on
+Big Code:
 
-## Source{d} Engine: Spark for Git
-
-[Engine]() is a Spark plugin that
+* The [Public Git Archive](https://pga.sourced.tech) is a dataset containing
+all GitHub repos with more than 50 stars
+* [Engine](https://github.com/src-d/engine) is a Spark plugin that
+enables access to multiple git repos
 
 ## Dowloading data: The Public Git Archive
 
@@ -699,7 +861,21 @@ all GitHub repos with more than 50 stars. It comes with a cmd line tool,
 ```bash
 $ pga list -u google |wc -l
    1251
-$ pga get -u google            # Retrieve data
-$ hadoop fs -mkdir /google     # Create upload location
-$ hadoop fs -put siva /google/ # Put data to HDFS
+$ pga get -u docker            # Retrieve data
+$ hadoop fs -put siva /        # Put data to HDFS
 ```
+
+## Using the source{d} engine
+
+```scala
+import tech.sourced.engine._
+
+val engine = Engine(spark, "hdfs://athens:8020/siva/latest/*/", "siva")
+val repos = engine.getRepositories
+val commits = engine.getRepositories.getReferences.getAllReferenceCommits
+
+repos.createOrReplaceTempView("repos")
+commits.createOrReplaceTempView("commits")
+```
+
+## Running arbitrary queries
