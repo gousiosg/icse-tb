@@ -18,7 +18,8 @@ Welcome! In this tutorial, we will go through the following 3 topics:
 
 * Data processing with functional programming
 * Internals of Apache Spark
-* Using Apache Spark for large scale repository mining
+* Using Apache Spark for common MSR data tasks
+* Using Apache Spark for repository mining
 
 ## Programming languages
 
@@ -839,6 +840,81 @@ min        1.000000
 max    17630.000000
 ```
 
+## Machine learning with Spark
+
+Spark has very nice [Machine learning library](https://spark.apache.org/docs/latest/ml-guide.html). The general idea is that we need to bring our
+data in a format that MLlib understands and then we can fit and evaluate
+several ready-made algorithms.
+
+The reshaping process composes of:
+
+* Converting factors to use OneHot encoding
+* Converting booleans to integers
+* Creating training and testing datasets
+
+The transformations are always done on DataFrames, in a pipeline fashion.
+
+We also need to specify an evaluation function.
+
+## Data preparation examples
+
+One Hot encoding for factors
+
+```python
+# Convert feature columns to a numeric vectors
+onehot = VectorAssembler(inputCols=feature_cols, outputCol='features')
+```
+
+Defining a transformation pipeline
+
+```python
+pipeline = Pipeline(stages=[onehot])
+allData = pipeline.fit(df).transform(df).cache()
+```
+
+Creating train and test datasets
+
+```python
+(train, test) = allData.randomSplit([0.9, 0.1], seed=42)
+```
+
+## Our evaluation function
+
+```python
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+
+## Calculate and return the AUC metric
+def evaluate(testData, predictions):
+    evaluator = BinaryClassificationEvaluator(labelCol="merged_int",
+                                              rawPredictionCol="rawPrediction")
+    print "AUC: %f" % evaluator.evaluate(predictions)
+```
+
+We just compare classifiers based on AUC
+
+## Random Forests and Gradient Boosting
+
+```python
+from pyspark.ml.classification import RandomForestClassifier as RF
+from pyspark.ml.evaluation import BinaryClassificationEvaluator
+
+rf = RF(labelCol='merged_int', featuresCol='features',
+        numTrees=100, maxDepth=5)
+rfModel = rf.fit(train)
+evaluate(testData, rfModel.transform(test))
+```
+AUC is 0.780482
+
+```python
+from pyspark.ml.classification import GBTClassifier
+
+gbt = GBTClassifier(maxIter=10, maxDepth=5,
+                    labelCol="merged_int", seed=42)
+gbtModel = gbt.fit(trainingData)
+evaluate(testData, gbtModel.transform(testData))
+```
+AUC is 0.792181
+
 # Mining repositories with Spark
 
 ## The source{d} MSR stack
@@ -851,7 +927,7 @@ all GitHub repos with more than 50 stars
 * [Engine](https://github.com/src-d/engine) is a Spark plugin that
 enables access to multiple git repos
 
-## Dowloading data: The Public Git Archive
+## Downloading data: The Public Git Archive
 
 The [Public Git Archive](https://pga.sourced.tech) is a dataset containing
 all GitHub repos with more than 50 stars. It comes with a cmd line tool,
@@ -859,10 +935,10 @@ all GitHub repos with more than 50 stars. It comes with a cmd line tool,
 `siva` format, which is suitable for use on HDFS.
 
 ```bash
-$ pga list -u google |wc -l
+$ pga list -u incubator |wc -l
    1251
-$ pga get -u docker            # Retrieve data
-$ hadoop fs -put siva /        # Put data to HDFS
+$ pga get -u incubator         # Retrieve data
+$ hadoop fs -put incubator /  # Put data to HDFS
 ```
 
 ## Using the source{d} engine
@@ -870,7 +946,7 @@ $ hadoop fs -put siva /        # Put data to HDFS
 ```scala
 import tech.sourced.engine._
 
-val engine = Engine(spark, "hdfs://athens:8020/siva/latest/*/", "siva")
+val engine = Engine(spark, "hdfs://athens:8020/incubator/latest/*/", "siva")
 val repos = engine.getRepositories
 val commits = engine.getRepositories.getReferences.getAllReferenceCommits
 
@@ -879,3 +955,31 @@ commits.createOrReplaceTempView("commits")
 ```
 
 ## Running arbitrary queries
+
+Seeing how many repos we have
+
+```scala
+spark.sql("select count(*) from repos").show(10, false)
+```
+
+Commits per repo
+```scala
+spark.sql("select repository_id, count(*)
+           from commits
+           group by repository_id
+           order by count(*) desc").show(10, false)
+```
+
+## Filtering files
+
+# Further reading
+
+## References
+
+If you are interested in Big Data Processing, you might want to
+have a look to my [Big Data Processing](http://gousios.org/courses/bigdata/) course at TU Delft.
+
+![Creative Commons](https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png)
+This work is (c) 2017 - onwards by Georgios Gousios and licensed
+under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International](http://creativecommons.org/licenses/by-nc-sa/4.0/) license.
