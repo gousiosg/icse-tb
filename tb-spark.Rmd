@@ -674,7 +674,7 @@ df = sqlContext.read.csv("/datasets/pullreqs.csv", sep=",",
 
 ## Spark cluster architecture {- }
 
-![Spark cluster architecture](spark-deployment.png){width=50%}
+![Spark cluster architecture](artwork/spark-deployment.png){width=50%}
 
 * _Executors_ do the actual processing; _worker_ nodes can contain multiple executors.
 * The _driver_ accepts user programs and returns processing results
@@ -979,7 +979,7 @@ spark.sql("select repository_id, count(*)
 If you are interested in Big Data Processing, you might want to
 have a look to my [Big Data Processing](http://gousios.org/courses/bigdata/) course at TU Delft.
 
-![Creative Commons](https://i.creativecommons.org/l/by-nc-sa/4.0/80x15.png)
+![Creative Commons](artwork/by-nc-sa.eu.png){width=10%}
 This work is (c) 2017 - onwards by Georgios Gousios and licensed
 under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0
 International](http://creativecommons.org/licenses/by-nc-sa/4.0/) license.
