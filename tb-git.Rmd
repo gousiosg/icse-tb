@@ -144,7 +144,6 @@ done
 ## Workflow: Fetch
 ![](artwork/fetch.jpg)
 
-
 ## Fetching Git data
 
 * Git internals
@@ -281,21 +280,10 @@ b058f06bd69ec7aed7a976c737eb8579904720fd
 
 ## Putting the pieces together
 
-![The Git Object Model](data-model-4.png){width=80%}
+![The Git Object Model](artwork/data-model-4.png){width=80%}
 
 The Git object model is a directed graph stored in a KV database,
 featuring file system semantics that enable content de-duplication.
-
-## How to implement Git log?
-
-**D:** Given what you know already, how would you implement a rudimentary
-version of `git log`?
-
-. . .
-
-```bash
-
-```
 
 ## Efficient mining of `git` data
 
@@ -372,55 +360,6 @@ import java.util.LinkedList;
 import java.util.List;
 [...]
 ```
-
-## Example workflow
-
-Find sizes for all test file versions in a Java project
-
-```bash
-git log --pretty="%h,%t,%ae" |
-while read logline; do
-  tree=`echo $logline | cut -f2 -d ','`
-  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
-done |
-sort |
-uniq |
-while read testfile; do
-  blob=`echo $testfile | cut -f1 -d' '`
-  size=`git --no-pager show $blob | wc -l | tr -d ' '`
-  echo $testfile $size
-done |
-sort -k 2
-```
-. . .
-
-**D:** Do you see how the code above could be improved?
-
-## Example workflow -- better version
-
-We can wrap loops into functions and apply them with `xargs` or `parallel`.
-This also makes our code testable.
-
-```bash
-function tree_items {
-  tree=$(echo $1 | cut -f2 -d ',')
-  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
-}
-
-function file_size {
-  blob=$(echo $1 | cut -f1 -d' ')
-  echo $1 $(git --no-pager show $blob | wc -l)
-}
-
-time git log --pretty="%h,%t,%ae" | parallel tree_items {} |
-sort | uniq |
-parallel file_size {} |
-sort -k 2
-```
-
-. . .
-
-**D:** How can we execute this code on 100s of repos?
 
 ## Worth knowing
 * *find*: select files from checked out projects
@@ -750,9 +689,58 @@ Result: 15:00 for Linux, 21:00 for FreeBSD, 22:00 for RxJava
 ## Scaling
 ![](artwork/scale.jpg)
 
+## Example workflow
+
+Find sizes for all test file versions in a Java project
+
+```bash
+git log --pretty="%h,%t,%ae" |
+while read logline; do
+  tree=`echo $logline | cut -f2 -d ','`
+  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
+done |
+sort |
+uniq |
+while read testfile; do
+  blob=`echo $testfile | cut -f1 -d' '`
+  size=`git --no-pager show $blob | wc -l | tr -d ' '`
+  echo $testfile $size
+done |
+sort -k 2
+```
+. . .
+
+**D:** Do you see how the code above could be improved?
+
+## Example workflow -- better version
+
+We can wrap loops into functions and apply them with `xargs` or `parallel`.
+This also makes our code testable.
+
+```bash
+function tree_items {
+  tree=$(echo $1 | cut -f2 -d ',')
+  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
+}
+
+function file_size {
+  blob=$(echo $1 | cut -f1 -d' ')
+  echo $1 $(git --no-pager show $blob | wc -l)
+}
+
+time git log --pretty="%h,%t,%ae" | parallel tree_items {} |
+sort | uniq |
+parallel file_size {} |
+sort -k 2
+```
+
+. . .
+
+**D:** How can we execute this code on 100s of repos?
+
 ## Scaling the analysis
 
-We have to options:
+We have two options:
 
   * Run yet another parallel loop
   * Use `make`
@@ -925,4 +913,11 @@ tr ',' '/' |
 xargs -I {} -P 8 git clone --bare https://github.com/{}
 ```
 
-##
+## Further reading
+
+## Licensing infromation
+
+![Creative Commons](artwork/by-nc-sa.eu.png){width=10%}
+This work is (c) 2017 - onwards by Georgios Gousios and licensed
+under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International](http://creativecommons.org/licenses/by-nc-sa/4.0/) license.
