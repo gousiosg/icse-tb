@@ -654,7 +654,7 @@ sort -k 2rn | head -1
 ```
 Result: 15:00 for Linux, 21:00 for FreeBSD, 22:00 for RxJava
 
-## Scaling
+## Pushing scale and scope
 ![](artwork/scale.jpg)
 
 ## Example workflow
@@ -752,7 +752,7 @@ clean:
   rm *.ts
 ```
 
-We use `make` as both a dependency tracker and a parallelisation tool.
+We use `make` as both a dependency tracker and a parallelization tool.
 
 ```bash
 $ make -n    # See what will be run
@@ -816,10 +816,10 @@ to `curl` as follows
 curl -H "Authorization: token OAUTH-TOKEN" -s ...
 ```
 
-## Cloning the repositories
+## Cloning 1000s of repos
 
-After we have clarified our selection, we need to clone the repositories.
-For this, we will use the Git `bare` format, to minimize space usage.
+* Use bare format
+* Script the process
 
 ```bash
 cat repos.txt |
@@ -828,11 +828,16 @@ tr ',' '/' |
 xargs -I {} -P 8 git clone --bare https://github.com/{}
 ```
 
-## Further reading
+## Debugging
+* Trace scripts with `-x`
+* Exit on errors with `-e`
+* Peek on pipeline data with `tee`
+* Log to standard error with `echo ... >&2`
 
-## Licensing infromation
+## Licensing information
 
 ![Creative Commons](artwork/by-nc-sa.eu.png){width=10%}
-This work is (c) 2017 - onwards by Georgios Gousios and licensed
+This work is (c) 2018 - onwards by Diomidis Spinellis and Georgios Gousios.
+It is licensed
 under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0
 International](http://creativecommons.org/licenses/by-nc-sa/4.0/) license.
