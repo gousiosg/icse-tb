@@ -1,6 +1,6 @@
 ---
 title: "Mining repositories with Git"
-author: "Diomidis Spinellis and Georgios Gousios"
+author: "Diomidis Spinellis,  Georgios Gousios"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   revealjs::revealjs_presentation:
@@ -15,10 +15,11 @@ output:
 ## Outline
 
 * Basics
-* Fetching Git data
-* Selecting elements
-* Processing records
-* Summarizing results
+* Workflow
+    * Fetching Git data
+    * Selecting elements
+    * Processing records
+    * Summarizing results
 * Scaling
 
 ## Basics
@@ -49,14 +50,6 @@ output:
     * Fields split by space or other special character
 * Filters
 
-## Typical work-flow
-
-* Fetch
-* Select
-* Process
-* Summarize
-* (Plus plumbing and programming)
-
 ## Getting to the command line
 
 * Windows: Cygwin + mintty or Windows Subsystem for Linux (WSL)
@@ -76,9 +69,6 @@ command >output-file
 
 # Pipeline
 command1 | command2
-
-# Background execution
-command &
 ```
 
 ## Variables, expansions
@@ -100,19 +90,6 @@ Literal \$ \' \"
 
 # Wildcards
 * ? [abc] [0-9]
-```
-
-## Combining commands
-
-```sh
-# Sequence
-command1 ; command2
-
-# Subshell execution
-(command1 ; command2)
-
-# Exit code variable
-$?
 ```
 
 ## Looping
@@ -155,7 +132,7 @@ done
 Git is a content-addressable file system, that happens to be good for versioning
 text files. From the user's perspective, Git separates commands in two types:
 
-  * **Porcelain commands:** Contrary to common belief, Git does have a
+  * **User-level commands:** Contrary to common belief, Git does have a
     user interface. This includes commands such as `commit`, `log`, etc.
 
   * **Plumbing commands:** Those interact directly with the Git internals,
@@ -174,7 +151,7 @@ $ echo "foo" | git hash-object --stdin -w
 257cc5642cb1a054f08cc83f2d943e56fd3ebe99
 
 # Verify that it was written
-$ find . -type f | grep 56fd3ebe99
+$ find . -name 7cc5642cb1a054f08cc83f2d943e56fd3ebe99
 ./.git/objects/25/7cc5642cb1a054f08cc83f2d943e56fd3ebe99
 
 # Retrieve contents back
@@ -186,8 +163,8 @@ foo
 
 Git supports 3 types of objects in its database:
 
-  * `blobs`, or content objects. Those store raw content
-  * `trees` store indices to files
+  * `blobs`, or content objects. These store raw content
+  * `trees` store a list of named pointers to blobs (directories)
   * `commits` store information about commits, including a link to
     the top level tree the commit represents
 
@@ -206,9 +183,7 @@ Merge branch 'italobelo-patch-1'
 
 ## Tree objects
 
-Tree objects contain links to blob objects or other tree objects.
-Each blob object always has a corresponding tree object, otherwise
-it is not discoverable.
+Tree objects contain named pointers to blob objects or other tree objects.
 
 ```bash
 $ git cat-file -p 4c2b7a1d59329a3d3a02e9abc5d1e878cf2b07af
@@ -230,8 +205,7 @@ $ git cat-file -p 45155798771
 
 ## Commit objects
 
-Commit objects represent a starting point to start navigating a file
-tree at a specific version.
+Commit objects contain a tree, author, committer, and parents.
 
 ```bash
 $ git cat-file -t 838b2b05e315713791da7e003af9cc80da64658e
@@ -246,10 +220,6 @@ Merge
 
 _Tags_ are a special type of commit objects: they point to a commit but
 has a `tagger` rather than an `author`.
-
-```bash
-$ git cat-file -t
-```
 
 ## References
 
@@ -287,10 +257,9 @@ featuring file system semantics that enable content de-duplication.
 
 ## Efficient mining of `git` data
 
-While Git is fast at checking out specific versions to analyze, we
-can skip this step all together.
-
-We just need three tools:
+Checking out specific versions to analyze is inefficient and
+error-prone.
+We skip this method and focus on three tools:
 
   * `show:` To interact with blobs
   * `ls-tree:` To interact with trees
@@ -346,8 +315,7 @@ $ git ls-tree --abbrev=10 -r aada6ffe | head -n 10
 
 ## Interacting with blobs
 
-Git `show` prints the contents of a blob, identified by its blob SHA. In
-that sense, it is similar to `cat-file`
+Git `show` prints the contents of a blob, identified by its blob SHA.
 
 ```bash
 $ git --no-pager show 841f06d4ee
@@ -712,7 +680,7 @@ sort -k 2
 
 **D:** Do you see how the code above could be improved?
 
-## Example workflow -- better version
+## Better version
 
 We can wrap loops into functions and apply them with `xargs` or `parallel`.
 This also makes our code testable.
@@ -766,10 +734,10 @@ export -f tree_items file_size per_repo
 time ls | parallel per_repo
 ```
 
-## Making it repeatable with `make`
+## Repeatability with `make`
 
 ```Makefile
-INPUTS = $(shell find . -type d -name '*.git')
+INPUTS = $(wildcard *.git)
 OUTPUTS = $(INPUTS:.git=.ts)
 
 TESTSIZE=/home/gousiosg/repos/testsize
@@ -791,77 +759,24 @@ $ make -n    # See what will be run
 $ make -j 16 # Run 16 parallel jobs
 ```
 
+## Running long tasks
+* Scripting
+* Ensure command isn't terminated with `nohup`
+* Reconnect to session with `screen` or `tmux`
+* Use cloud servers
+
 ## Mining with `libgit2`/`JGit`
 
 Shell scripting can go a long way, but it has limitations:
 
 * Each step of a pipeline is a process, which must be spawned. Loops can
   be costly.
-* Useful data structures (queues, trees) are cumbersome to implement.
+* Useful data structures (queues, trees, graphs) are cumbersome to implement.
 * Testing/Debugging can be tricky.
 
 In those cases, we can use `libgit2` or `JGit`, for scripting languages or
 Java; we get exactly the same interface, but in a much richer programming
 environment.
-
-## Selecting repositories to mine
-
-Generally, we need repositories that are active and representative.
-Fortunately, we have datasets such as GHTorrent and RepoReapers available.
-We can use the following selection process:
-
-From the whole population:
-
-1. Choose repositories that have forks ($A$)
-2. from $A$, exclude repos that were inactive _recently_ ($B$)
-2. from $B$, exclude repos that never received a PR ($C$)
-
-On $C$, we can then apply further criteria (e.g. programming language,
-build system, minimum number of stars etc).
-
-If the project list is still too long, then apply _stratified sampling_
-
-## GHTorrent queries (1)
-
-Projects that have forks ($A$)
-
-```sql
-select distinct(p1.id), u.login, p1.name
-from projects p1
-  join projects p2 on p1.id = p2.forked_from
-  join users u on u.id = p1.owner_id
-```
-
-Projects that where active recently ($B$)
-
-```sql
-select distinct(p.id), u.login, p.name
-from projects p
-  join users u on u.id = p.owner_id
-  join project_commits pc on pc.project_id = p.id
-  join commits c on pc.commit_id = c.id
-where c.created_at >= now() - interval 3 month
-```
-
-## GHTorrent queries (2)
-
-Projects that never received a PR ($C$)
-
-```sql
-select distinct(p.id), u.login, p.name
-from projects p
-  join users u on u.id = p.owner_id
-  join pull_requests pr on pr.base_repo_id = p.id
-where c.created_at >= now() - interval 3 month
-```
-
-Putting it all together:
-
-```sql
-select A.id, A.login, A.name
-from A join B on A.id = B.id
-  left join C on B.id = C.id
-```
 
 ## Getting extra information
 
