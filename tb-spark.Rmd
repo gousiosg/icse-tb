@@ -16,10 +16,9 @@ output:
 
 Welcome! In this tutorial, we will go through the following 3 topics:
 
-* Data processing with functional programming
+* Enough FP to become dangerous
 * Internals of Apache Spark
 * Using Apache Spark for common MSR data tasks
-* Using Apache Spark for repository mining
 
 ## Programming languages
 
@@ -54,6 +53,8 @@ In our tutorial, we will be using Scala and Python.
 * **Structured**: Data with known formats, linked together in graphs or tables
     - SQL or Graph databases
     - Images
+
+*Q:* What kind of data is source code?
 
 ## Sequences / Lists {- }
 
@@ -970,11 +971,7 @@ spark.sql("select repository_id, count(*)
            order by count(*) desc").show(10, false)
 ```
 
-## Filtering files
-
-# Further reading
-
-## References
+## References / License
 
 If you are interested in Big Data Processing, you might want to
 have a look to my [Big Data Processing](http://gousios.org/courses/bigdata/) course at TU Delft.

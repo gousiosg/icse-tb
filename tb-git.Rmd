@@ -151,8 +151,8 @@ $ echo "foo" | git hash-object --stdin -w
 257cc5642cb1a054f08cc83f2d943e56fd3ebe99
 
 # Verify that it was written
-$ find . -name 7cc5642cb1a054f08cc83f2d943e56fd3ebe99
-./.git/objects/25/7cc5642cb1a054f08cc83f2d943e56fd3ebe99
+$ find . -name 257cc5642cb1a054f08cc83f2d943e56fd3ebe99
+./.git/objects/25/257cc5642cb1a054f08cc83f2d943e56fd3ebe99
 
 # Retrieve contents back
 git cat-file -p 257cc5642cb1a054f08cc83f2d943e56fd3ebe99
@@ -731,7 +731,7 @@ function per_repo {
 
 export -f tree_items file_size per_repo
 
-time ls | parallel per_repo
+time ls | parallel -P 4 per_repo
 ```
 
 ## Repeatability with `make`
