@@ -825,7 +825,7 @@ curl -H "Authorization: token OAUTH-TOKEN" -s ...
 cat repos.txt |
 cut -f 2,3 -d ',' |
 tr ',' '/' |
-xargs -I {} -P 8 git clone --bare https://github.com/{}
+xargs -I@ -P 8 git clone --bare https://github.com/@
 ```
 
 ## Debugging
