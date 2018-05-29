@@ -798,7 +798,7 @@ stars, language), to do the selection. This is easy to do with two basic tools:
   * `curl` Retrieves contents from URLs
   * `jq` Query JSON objects
 
-## Obtaining star count
+## Obtain GitHub star count
 
 ```bash
 cat repos.csv | cut -f 2,3 -d ','  | tr ',' '/' |
