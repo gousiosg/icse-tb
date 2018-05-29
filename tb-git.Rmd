@@ -620,7 +620,7 @@ wc -l
 Count common / total commits in Linux kernel / drivers
 
 ```bash
-comm -12 <(area_commits kernel) <(area_commits drivers) |
+comm <(area_commits kernel) <(area_commits drivers) |
 # Sum kernel, driver, and common commits
 awk -F$'\t' '
   $1 {k++}
