@@ -10,6 +10,10 @@ output:
     reveal_options:
       slideNumber: true
       previewLinks: true
+  pdf_document:
+    template: "default-1.17.0.2.tex"
+  html:
+    template: "default.html"
 ---
 
 ## Outline
