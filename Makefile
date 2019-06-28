@@ -8,7 +8,7 @@ R=Rscript -e
 .PHONY: all html pdf book
 
 CONTENT_DIRS := .
-INPUTS = tb-git.html
+INPUTS = tb-git.Rmd
 
 OUTPUTS_HTML = $(INPUTS:.Rmd=.html)
 OUTPUTS_PDF = $(INPUTS:.Rmd=.pdf)
@@ -29,9 +29,6 @@ OUTPUTS_SLIDES_PDF = $(OUTPUTS_SLIDES:.reveal.html=.reveal.pdf)
 %.reveal.html: %.Rmd  $(DEPS)
 	$R "library(rmarkdown); render('$<', output_file=gsub(pattern = '.Rmd', '.reveal.html', basename('$<')), output_format = 'revealjs::revealjs_presentation')"
 
-%.reveal.pdf: %.reveal.html $(DEPS)
-	docker run --rm -t -v `pwd`:/home/user astefanutti/decktape /home/user/$< /home/user/$@
-
 all: html slides pdf
 
 html: $(DEPS) $(INPUTS) $(OUTPUTS_HTML)
@@ -40,8 +37,8 @@ slides: $(DEPS) $(INPUTS) $(OUTPUTS_SLIDES)
 slides_pdf: $(DEPS) $(OUTPUTS_SLIDES_PDF)
 
 clean:
-	- rm *~
-	- rm $(OUTPUTS_PDF)
-	- rm $(OUTPUTS_HTML)
-	- rm $(OUTPUTS_SLIDES)
-	- rm $(OUTPUTS_SLIDES_PDF)
+	- rm -f *~ *.aux *.out
+	- rm -f $(OUTPUTS_PDF)
+	- rm -f $(OUTPUTS_HTML)
+	- rm -f $(OUTPUTS_SLIDES)
+	- rm -f $(OUTPUTS_SLIDES_PDF)
