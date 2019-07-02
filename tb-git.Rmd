@@ -122,6 +122,10 @@ done
 * GIYF
 * [The Art of the Command Line](https://github.com/jlevy/the-art-of-command-line)
 
+## Book
+![](artwork/dscl-cover.png)
+Also [available online](https://www.datascienceatthecommandline.com/)
+
 ## Workflow: Fetch
 ![](artwork/fetch.jpg)
 
@@ -840,6 +844,7 @@ xargs -I@ -P 8 git clone --bare https://github.com/@
 
 ## Further reading
 * Chacon, Scott, and Ben Straub. *Pro Git*. Berkeley, CA New York, NY: Apress,Distributed to the Book trade worldwide by Spring Science+Business Media, 2014. Print.
+* Jeroen Janssens, 2014. *Data Science at the Command Line*, O’Reilly, Sebastopol, CA.
 * Friedl, J. E., 2006. *Mastering Regular Expressions: Powerful Techniques for Perl and Other Tools*, 3rd Edition. O'Reilly Media, Sebastopol, CA.
 * Kernighan, Brian W., and Rob Pike. *The UNIX programming environment*. Englewood Cliffs, N.J: Prentice-Hall, 1984. Print.
 * Diomidis Spinellis. [Tools and techniques for analyzing product and process data](doi:10.1016/B978-0-12-411519-4.00007-0). In Tim Menzies, Christian Bird, and Thomas Zimmermann, editors, *The Art and Science of Analyzing Software Data*, pages 161-212. Morgan-Kaufmann, 2015.
