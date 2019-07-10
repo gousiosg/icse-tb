@@ -829,9 +829,7 @@ curl -H "Authorization: token OAUTH-TOKEN" -s ...
 * Script the process
 
 ```bash
-cat repos.txt |
-cut -f 2,3 -d ',' |
-tr ',' '/' |
+awk -F, '{print $2 "/" $3}' repos.txt |
 xargs -I@ -P 8 git clone --bare https://github.com/@
 ```
 
