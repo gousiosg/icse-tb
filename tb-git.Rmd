@@ -620,6 +620,13 @@ wc -l
 * Associative arrays
 * `BEGIN`, `END` pseudo-predicates
 
+## awk filter example
+When was each committer's latest commit
+```bash
+git log --date-order --date=format:%F --pretty='%ae %ad' |
+awk '!seen[$1] {print; seen[$1] = 1}'
+```
+
 ## awk summary example
 Count common / total commits in Linux kernel / drivers
 
