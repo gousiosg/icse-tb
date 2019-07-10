@@ -12,8 +12,6 @@ output:
       previewLinks: true
   pdf_document:
     template: "default-1.17.0.2.tex"
-  html:
-    template: "default.html"
 ---
 
 ## Outline
@@ -677,19 +675,16 @@ Result: 15:00 for Linux, 21:00 for FreeBSD, 22:00 for RxJava
 Find sizes for all test file versions in a Java project
 
 ```bash
-git log --pretty="%h,%t,%ae" |
-while read logline; do
-  tree=`echo $logline | cut -f2 -d ','`
-  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
+git log --pretty='%t' |
+while read tree; do
+  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | awk '{print $3, $4}'
 done |
-sort |
-uniq |
-while read testfile; do
-  blob=`echo $testfile | cut -f1 -d' '`
-  size=`git --no-pager show $blob | wc -l | tr -d ' '`
-  echo $testfile $size
+sort -u |
+while read blob testfile; do
+  echo -n "$testfile "
+  git show $blob | wc -l
 done |
-sort -k 2
+sort -k2r
 ```
 . . .
 
@@ -702,19 +697,16 @@ This also makes our code testable.
 
 ```bash
 function tree_items {
-  tree=$(echo $1 | cut -f2 -d ',')
-  git ls-tree --abbrev=10 -r $tree | grep Test.java$ | tr '\t' ' ' |  cut -f3,4 -d ' '
+  git ls-tree --abbrev=10 -r $1 | grep Test.java$ | awk '{print $3, $4}'
 }
-
 function file_size {
-  blob=$(echo $1 | cut -f1 -d' ')
-  echo $1 $(git --no-pager show $blob | wc -l)
+  set $1
+  echo -n "$1 $2 " ; git show $1 | wc -l
 }
-
-time git log --pretty="%h,%t,%ae" | parallel tree_items {} |
-sort | uniq |
+time git log --pretty='%t' | parallel tree_items {} |
+sort -u |
 parallel file_size {} |
-sort -k 2
+sort -k2r
 ```
 
 . . .
