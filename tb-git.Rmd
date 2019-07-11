@@ -21,6 +21,7 @@ output:
     * Processing records
     * Summarizing results
 * Scaling
+* Debugging
 
 ## Basics
 
