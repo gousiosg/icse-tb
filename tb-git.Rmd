@@ -142,6 +142,8 @@ done
 * `man` *command*
 * GIYF
 * [The Art of the Command Line](https://github.com/jlevy/the-art-of-command-line)
+* [explainshell.com](https://explainshell.com/)
+* [regular expressions 101](https://regex101.com/)
 
 ## Book
 ![](artwork/dscl-cover.png)
