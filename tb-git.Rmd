@@ -824,6 +824,9 @@ to `curl` as follows
 curl -H "Authorization: token OAUTH-TOKEN" -s ...
 ```
 
+## Obtaining data from diverse sources
+[Perceval](https://github.com/chaoss/grimoirelab-perceval) covers tens of systems: askbot, bugzilla, bugzillarest, confluence, discourse, dockerhub, gerrit, git, github, gitlab, googlehits, groupsio, hyperkitty, jenkins, jira, launchpad, mattermost, mbox, mediawiki, meetup, nntp, phabricator, pipermail, redmine, rss, slack, stackexchange, supybot, telegram, twitter
+
 ## Cloning 1000s of repos
 
 * Use bare format
