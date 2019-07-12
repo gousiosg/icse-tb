@@ -14,6 +14,28 @@ output:
     template: "default-1.17.0.2.tex"
 ---
 
+## About...
+Code Reading: The Open Source Perspective ![](artwork/cover-cr.jpg)
+
+Code Quality: The Open Source Perspective ![](artwork/cover-cq.jpg)
+
+
+## Software Evolution Research
+* Power laws in software (ACM TOSEM 2008)
+* GHTorrent: Github's data from a firehose (MSR 2012)
+* The evolution of C programming practices (ICSE 2016)
+* The long-term growth rate of evolving software (JSEP 2017)
+* A repository of Unix History and evolution (EmSE 2017)
+* Documented Unix facilities over 48 years (MSR 2018)
+* Analyzing the evolution of JavaScript code in the wild (MSR 2019)
+* Evolution of the Unix system architecture (IEEE TSE 2019)
+
+## Unix History Git Repo
+
+![](artwork/poster.png)
+
+[github.com/dspinellis/unix-history-repo](https://github.com/dspinellis/unix-history-repo)
+
 ## Outline
 
 * Basics
